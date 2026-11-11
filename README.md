@@ -4,6 +4,17 @@ Measure what happens to confirmed and ambiguous writes when a PostgreSQL primary
 
 [CI runs and downloadable drill reports](https://github.com/bfsj/pg-failover-lab/actions/workflows/drill.yml)
 
+## 首次真实演练
+
+在同一配置的两套单节点 kind 集群中删除主库 Pod，比较同步和异步复制。表中为观察到新主库确认写入的时间上界，包含客户端采样开销。每种模式各跑一次。
+
+| 模式 | 恢复写入上界 | 客户端确认写入 | 恢复后缺失的确认写入 | 结果未知且恢复后未查到 |
+|---|---:|---:|---:|---:|
+| [异步](examples/async.json) | 4.554 s | 5 | 0 | 3 |
+| [同步](examples/sync.json) | 5.542 s | 4 | 0 | 2 |
+
+[原始演练记录](https://github.com/bfsj/pg-failover-lab/actions/runs/43040624513) · [在 Agent 项目中回放这次主库变更](https://github.com/bfsj/kube-incident-replay/blob/main/examples/pg-failover.json)
+
 ## Reproduce
 
 On Linux or macOS with Docker, kind, kubectl, Bash and Python 3.10+:

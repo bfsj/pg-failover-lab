@@ -1,0 +1,15 @@
+{
+  "run_id": "d73bda5d68a84f11a12b6c521e5cd3a9",
+  "old_primary": "lab-1",
+  "new_primary": "lab-3",
+  "fault_s": 0.752,
+  "observed_promotion_s": 2.772,
+  "confirmed_recovery_upper_bound_s": 5.542,
+  "ack_count": 4,
+  "missing_ack": [],
+  "unknown_present": [],
+  "unknown_absent": [
+    4,
+    5
+  ]
+}
