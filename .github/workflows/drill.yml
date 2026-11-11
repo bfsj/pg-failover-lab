@@ -1,0 +1,29 @@
+name: PostgreSQL failover drill
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  exercise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [async, sync]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest -v
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - run: bash setup.sh ${{ matrix.mode }}
+      - run: python3 drill.py --output results
+      - if: failure()
+        run: |
+          kubectl --context kind-pg-lab -n pg-lab get cluster,pod,pvc -o wide || true
+          kubectl --context kind-pg-lab -n pg-lab get events --sort-by=.lastTimestamp | tail -40 || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drill-${{ matrix.mode }}
+          path: results/

@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pg-lab
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: lab
+  namespace: pg-lab
+spec:
+  instances: 3
+  storage:
+    size: 1Gi
+  affinity:
+    enablePodAntiAffinity: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: pg-lab
+spec:
+  containers:
+    - name: psql
+      image: postgres:18-alpine
+      command: ["sleep", "infinity"]
+      env:
+        - name: PGHOST
+          value: lab-rw
+        - name: PGUSER
+          value: app
+        - name: PGDATABASE
+          value: app
+        - name: PGCONNECT_TIMEOUT
+          value: "3"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lab-app
+              key: password
