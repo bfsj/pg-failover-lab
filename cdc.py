@@ -54,6 +54,14 @@ def prepare(mode):
         for p in names), 180)
     kubectl("apply", "-f", str(Path(__file__).with_name("subscriber.yaml")))
     kubectl("wait", "pod/subscriber", "--for=condition=Ready", "--timeout=180s", timeout=190)
+    # Apply workers authenticate independently of the interactive psql process.
+    # Write the passfile inside the lab Pod; its contents never leave the container.
+    kubectl("exec", "subscriber", "--", "sh", "-ec", r"""
+        umask 077
+        escaped=$(printf '%s' "$PGPASSWORD" | sed 's/[\\:]/\\&/g')
+        printf 'lab-rw:5432:*:app:%s\n' "$escaped" > /var/lib/postgresql/cdc.pgpass
+        chown postgres:postgres /var/lib/postgresql/cdc.pgpass
+    """)
     sql(SCHEMA)
     old = primary()
     pg(old, "ALTER ROLE app REPLICATION")
@@ -61,7 +69,7 @@ def prepare(mode):
     downstream(SCHEMA)
     flag = "true" if mode == "failover" else "false"
     downstream("CREATE SUBSCRIPTION cdc_lab CONNECTION 'host=lab-rw port=5432 dbname=app "
-               "user=app' PUBLICATION orders "
+               "user=app passfile=/var/lib/postgresql/cdc.pgpass' PUBLICATION orders "
                f"WITH (failover={flag}, copy_data=false)")
     sql("INSERT INTO receipts VALUES ('preflight',0)")
     until("pre-fault end-to-end delivery", lambda: downstream(
