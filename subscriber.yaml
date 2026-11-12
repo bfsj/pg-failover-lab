@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: subscriber
+  namespace: pg-lab
+spec:
+  containers:
+    - name: postgres
+      image: postgres:18-alpine
+      env:
+        - name: POSTGRES_PASSWORD_FILE
+          value: /run/lab/password
+      volumeMounts:
+        - name: lab-login
+          mountPath: /run/lab
+          readOnly: true
+      command: ["/bin/sh", "-ec"]
+      args:
+        - |
+          umask 077
+          password=$(sed 's/[\\:]/\\&/g' /run/lab/password)
+          printf 'lab-rw:5432:app:app:%s\n' "$password" > /tmp/subscriber.pgpass
+          chown postgres:postgres /tmp/subscriber.pgpass
+          exec docker-entrypoint.sh postgres
+      readinessProbe:
+        exec:
+          command: [pg_isready, -h, "127.0.0.1", -U, postgres]
+        periodSeconds: 2
+  volumes:
+    - name: lab-login
+      secret:
+        secretName: lab-app
+        items:
+          - key: password
+            path: password

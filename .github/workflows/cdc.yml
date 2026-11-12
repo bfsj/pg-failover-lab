@@ -1,0 +1,31 @@
+name: Logical subscriber failover
+on:
+  workflow_dispatch:
+  push:
+    paths: ['cdc.py', 'drill.py', 'subscriber.yaml', 'lab.yaml', 'setup.sh', '.github/workflows/cdc.yml']
+permissions:
+  contents: read
+jobs:
+  cdc:
+    strategy:
+      fail-fast: false
+      matrix:
+        slot: [ordinary, failover]
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - run: bash setup.sh async
+      - run: python cdc.py ${{ matrix.slot }} --output results-cdc --window 90
+      - if: failure()
+        run: |
+          kubectl --context kind-pg-lab -n pg-lab get cluster,pod,pvc
+          kubectl --context kind-pg-lab -n pg-lab get events --sort-by=.lastTimestamp | tail -25
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdc-${{ matrix.slot }}
+          path: results-cdc/

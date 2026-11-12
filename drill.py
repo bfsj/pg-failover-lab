@@ -37,7 +37,7 @@ def reconcile(attempts, rows):
     }
 
 
-def experiment(directory, timeout):
+def experiment(directory, timeout, *, clock_origin=None):
     directory.mkdir(parents=True, exist_ok=False)
     run_id = uuid.uuid4().hex
     sql("CREATE TABLE IF NOT EXISTS receipts (run_id text, seq integer, "
@@ -45,7 +45,7 @@ def experiment(directory, timeout):
     old = primary()
     if not old:
         raise RuntimeError("Cluster does not have an elected primary")
-    start = time.monotonic()
+    start = time.monotonic() if clock_origin is None else clock_origin
     elapsed = lambda: round(time.monotonic() - start, 3)
     attempts = []
     stop = threading.Event()
