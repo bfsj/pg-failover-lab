@@ -87,7 +87,7 @@ def prepare(mode):
 def measure(mode, directory, window):
     slots = prepare(mode)
     origin = time.monotonic()
-    report = experiment(directory, 180, clock_origin=origin)
+    report = experiment(directory, 180, clock_origin=origin, deletion_grace=5)
     journal = [json.loads(line) for line in (directory / "attempts.jsonl").read_text().splitlines()]
     ack = {r["seq"] for r in journal if r["status"] == "ack"}
     after = {r["seq"] for r in journal if r["status"] == "ack" and
@@ -107,7 +107,8 @@ def measure(mode, directory, window):
         time.sleep(0.5)
     new_slot = pg(report["new_primary"], "SELECT count(*) FROM pg_replication_slots "
                   "WHERE slot_name='cdc_lab' AND invalidation_reason IS NULL")
-    result = {"mode": mode, "version": pg(report["new_primary"], "SHOW server_version"),
+    result = {"mode": mode, "pod_deletion_grace_s": 5,
+              "version": pg(report["new_primary"], "SHOW server_version"),
               "pre_fault_ready_slots": slots, "usable_slot_on_new_primary": int(new_slot),
               "subscriber_enabled": downstream("SELECT subenabled FROM pg_subscription "
                                                "WHERE subname='cdc_lab'"),

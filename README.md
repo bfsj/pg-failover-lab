@@ -2,6 +2,8 @@
 
 ## CDC subscriber recovery
 
+This experiment gives the old primary Pod five seconds of termination grace in both arms. With the default grace period and an active subscriber, the original test observed the old primary still terminating at the 180-second deadline. [Initial run](https://github.com/bfsj/pg-failover-lab/actions/runs/43159209406)
+
 On a fresh kind lab, run `bash setup.sh async` and then `python cdc.py failover --output results-cdc`. Repeat on a newly created cluster with `ordinary` to run the control. Both arms enable the same publisher settings and let a separate PostgreSQL 18 subscriber follow the lab-rw Service. Only the subscription's failover flag differs. The test verifies delivery before injection and checks logical slot readiness on both eligible standbys.
 
 After deleting the primary Pod, the verifier compares downstream rows with the client journal. The report measures the upper bound until a write started after promotion appears downstream. Subscriber polling starts after the publisher verifier finishes. An ordinary slot that disappears on promotion is recorded as an observed interruption, with the final polling time and missing sequence numbers. Use the [CDC workflow](https://github.com/bfsj/pg-failover-lab/actions/workflows/cdc.yml) to reproduce both arms.

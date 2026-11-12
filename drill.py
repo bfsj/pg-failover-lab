@@ -37,7 +37,7 @@ def reconcile(attempts, rows):
     }
 
 
-def experiment(directory, timeout, *, clock_origin=None):
+def experiment(directory, timeout, *, clock_origin=None, deletion_grace=None):
     directory.mkdir(parents=True, exist_ok=False)
     run_id = uuid.uuid4().hex
     sql("CREATE TABLE IF NOT EXISTS receipts (run_id text, seq integer, "
@@ -76,7 +76,8 @@ def experiment(directory, timeout, *, clock_origin=None):
         if not primed.wait(60):
             raise RuntimeError("No stable write baseline; see attempts.jsonl")
         deleted_at = elapsed()
-        kubectl("delete", "pod", old, "--wait=false")
+        grace = [] if deletion_grace is None else [f"--grace-period={deletion_grace}"]
+        kubectl("delete", "pod", old, "--wait=false", *grace)
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
             try:
