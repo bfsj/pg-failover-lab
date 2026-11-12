@@ -24,6 +24,7 @@ jobs:
         run: |
           kubectl --context kind-pg-lab -n pg-lab get cluster,pod,pvc
           kubectl --context kind-pg-lab -n pg-lab get events --sort-by=.lastTimestamp | tail -25
+          kubectl --context kind-pg-lab -n pg-lab logs subscriber --tail=25 || true
       - if: always()
         uses: actions/upload-artifact@v4
         with:

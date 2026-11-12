@@ -8,28 +8,23 @@ spec:
     - name: postgres
       image: postgres:18-alpine
       env:
-        - name: POSTGRES_PASSWORD_FILE
-          value: /run/lab/password
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lab-app
+              key: password
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: lab-app
+              key: password
       volumeMounts:
-        - name: lab-login
-          mountPath: /run/lab
-          readOnly: true
-      command: ["/bin/sh", "-ec"]
-      args:
-        - |
-          umask 077
-          password=$(sed 's/[\\:]/\\&/g' /run/lab/password)
-          printf 'lab-rw:5432:app:app:%s\n' "$password" > /tmp/subscriber.pgpass
-          chown postgres:postgres /tmp/subscriber.pgpass
-          exec docker-entrypoint.sh postgres
+        - name: pgdata
+          mountPath: /var/lib/postgresql
       readinessProbe:
         exec:
           command: [pg_isready, -h, "127.0.0.1", -U, postgres]
         periodSeconds: 2
   volumes:
-    - name: lab-login
-      secret:
-        secretName: lab-app
-        items:
-          - key: password
-            path: password
+    - name: pgdata
+      emptyDir: {}

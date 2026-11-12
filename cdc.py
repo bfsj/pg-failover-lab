@@ -61,7 +61,7 @@ def prepare(mode):
     downstream(SCHEMA)
     flag = "true" if mode == "failover" else "false"
     downstream("CREATE SUBSCRIPTION cdc_lab CONNECTION 'host=lab-rw port=5432 dbname=app "
-               "user=app passfile=/tmp/subscriber.pgpass' PUBLICATION orders "
+               "user=app' PUBLICATION orders "
                f"WITH (failover={flag}, copy_data=false)")
     sql("INSERT INTO receipts VALUES ('preflight',0)")
     until("pre-fault end-to-end delivery", lambda: downstream(
