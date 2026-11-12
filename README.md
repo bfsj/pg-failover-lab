@@ -2,6 +2,15 @@
 
 ## CDC subscriber recovery
 
+**PostgreSQL 18.6 单次配对实验**。两组主库都恢复了写入，客户端确认过的事务在新主库上全部查回。下游表现如下，时间从请求删除旧主库 Pod 开始计。
+
+| 逻辑槽 | 主库确认新写入的时间上界 | 下游观察到切主后写入的时间上界 | 下游查回的确认事务 |
+|---|---:|---:|---:|
+| [普通槽](examples/cdc-ordinary.json) | 23.464 s | 到 113.933 s 仍未观察到 | 3/4 |
+| [已同步的 failover slot](examples/cdc-failover.json) | 22.932 s | 28.329 s | 6/6 |
+
+普通槽组在新主库上找不到原槽，订阅仍显示 enabled，下游未收到序号 33。另一组在故障前确认两台备库的槽均已就绪，切换后下游自动追平。[两个作业和原始记录](https://github.com/bfsj/pg-failover-lab/actions/runs/43160032142)
+
 This experiment gives the old primary Pod five seconds of termination grace in both arms. With the default grace period and an active subscriber, the original test observed the old primary still terminating at the 180-second deadline. [Initial run](https://github.com/bfsj/pg-failover-lab/actions/runs/43159209406)
 
 On a fresh kind lab, run `bash setup.sh async` and then `python cdc.py failover --output results-cdc`. Repeat on a newly created cluster with `ordinary` to run the control. Both arms enable the same publisher settings and let a separate PostgreSQL 18 subscriber follow the lab-rw Service. Only the subscription's failover flag differs. The test verifies delivery before injection and checks logical slot readiness on both eligible standbys.
