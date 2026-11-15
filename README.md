@@ -1,5 +1,9 @@
 # PostgreSQL Failover Lab
 
+[![Regression status](https://github.com/bfsj/pg-failover-lab/actions/workflows/cdc.yml/badge.svg?branch=main)](https://github.com/bfsj/pg-failover-lab/actions/workflows/cdc.yml)
+
+默认分支按新加坡时间每周二 09:37安排一次回归，也可以从 [Actions 页面](https://github.com/bfsj/pg-failover-lab/actions/workflows/cdc.yml) 手动运行。每次在两个新集群里分别运行普通槽和故障切换槽实验。摘要显示主库与下游恢复时间、下游缺失的确认事务数和新主库槽位。普通槽组预期会中断，是对照组。作业失败时先看失败步骤，再下载对应的 `cdc-ordinary` 或 `cdc-failover`，用事务序号核对客户端记录与下游结果。下一项工作是量化探测耗时，并比较多次演练的分布。[维护 Issue #1](https://github.com/bfsj/pg-failover-lab/issues/1)
+
 ## CDC subscriber recovery
 
 **PostgreSQL 18.6 单次配对实验**。两组主库都恢复了写入，客户端确认过的事务在新主库上全部查回。下游表现如下，时间从请求删除旧主库 Pod 开始计。

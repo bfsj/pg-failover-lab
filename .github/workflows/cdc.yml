@@ -1,8 +1,10 @@
 name: Logical subscriber failover
 on:
+  schedule:
+    - cron: '37 1 * * 2'
   workflow_dispatch:
   push:
-    paths: ['cdc.py', 'drill.py', 'subscriber.yaml', 'lab.yaml', 'setup.sh', '.github/workflows/cdc.yml']
+    paths: ['cdc.py', 'drill.py', 'subscriber.yaml', 'lab.yaml', 'setup.sh', '.github/workflows/cdc.yml', '.github/scripts/run_summary.py']
 permissions:
   contents: read
 jobs:
@@ -20,6 +22,9 @@ jobs:
           install_only: true
       - run: bash setup.sh async
       - run: python cdc.py ${{ matrix.slot }} --output results-cdc --window 90
+      - name: Publish experiment summary
+        if: ${{ !cancelled() && hashFiles('results-cdc/cdc.json') != '' }}
+        run: python .github/scripts/run_summary.py
       - if: failure()
         run: |
           kubectl --context kind-pg-lab -n pg-lab get cluster,pod,pvc
