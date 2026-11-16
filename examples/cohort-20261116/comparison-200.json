@@ -1,0 +1,47 @@
+{
+  "selection": "1 <= pair <= 100; both modes",
+  "prior": {
+    "ordinary": {
+      "n": 102,
+      "resumed": 0,
+      "p50": null,
+      "p95": null,
+      "confirmed": 550,
+      "missing": 244,
+      "publisher_missing": 0,
+      "cutoff_median": 114.1885
+    },
+    "failover": {
+      "n": 102,
+      "resumed": 102,
+      "p50": 28.3245,
+      "p95": 28.835750000000004,
+      "confirmed": 557,
+      "missing": 0,
+      "publisher_missing": 0,
+      "cutoff_median": 28.3245
+    }
+  },
+  "current": {
+    "ordinary": {
+      "n": 100,
+      "resumed": 0,
+      "p50": null,
+      "p95": null,
+      "confirmed": 538,
+      "missing": 238,
+      "publisher_missing": 0,
+      "cutoff_median": 114.201
+    },
+    "failover": {
+      "n": 100,
+      "resumed": 100,
+      "p50": 28.314,
+      "p95": 28.8425,
+      "confirmed": 547,
+      "missing": 0,
+      "publisher_missing": 0,
+      "cutoff_median": 28.314
+    }
+  }
+}
