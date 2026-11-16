@@ -1,0 +1,54 @@
+{
+  "ordinary": {
+    "trials": 102,
+    "first_seen": 0,
+    "publisher": {
+      "n": 102,
+      "min": 22.326,
+      "p50": 23.444499999999998,
+      "p95": 24.31455,
+      "max": 24.696
+    },
+    "downstream": null,
+    "cutoff": {
+      "n": 102,
+      "min": 113.011,
+      "p50": 114.1885,
+      "p95": 115.16005,
+      "max": 115.6
+    },
+    "ack": 550,
+    "publisher_missing": 0,
+    "ds_missing": 244,
+    "source_unknown_present_downstream": 0
+  },
+  "failover": {
+    "trials": 102,
+    "first_seen": 102,
+    "publisher": {
+      "n": 102,
+      "min": 22.622,
+      "p50": 23.384,
+      "p95": 24.5075,
+      "max": 25.989
+    },
+    "downstream": {
+      "n": 102,
+      "min": 25.214,
+      "p50": 28.3245,
+      "p95": 28.835750000000004,
+      "max": 29.167
+    },
+    "cutoff": {
+      "n": 102,
+      "min": 25.214,
+      "p50": 28.3245,
+      "p95": 28.835750000000004,
+      "max": 29.167
+    },
+    "ack": 557,
+    "publisher_missing": 0,
+    "ds_missing": 0,
+    "source_unknown_present_downstream": 0
+  }
+}
