@@ -1,0 +1,52 @@
+name: CDC independent cluster cohort
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  trial:
+    strategy:
+      max-parallel: 16
+      fail-fast: false
+      matrix:
+        pair: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102]
+        slot: [ordinary, failover]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          install_only: true
+      - run: bash setup.sh async
+      - run: python cdc.py ${{ matrix.slot }} --output results-cdc --window 90
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cdc-${{ matrix.pair }}-${{ matrix.slot }}
+          path: results-cdc/
+          retention-days: 14
+  aggregate:
+    if: always()
+    needs: trial
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: cdc-*
+          path: collected
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows = []
+          for p in sorted(Path("collected").glob("*/cdc.json")):
+              row = json.loads(p.read_text())
+              row["pair"] = int(p.parent.name.split("-")[1])
+              rows.append(row)
+          Path("cohort.json").write_text(json.dumps(rows))
+          print("FINAL_COHORT=" + json.dumps([{k:v for k,v in dict(mode=r["mode"],pair=r["pair"],publisher=r["publisher_recovery_upper_s"],subscriber=r["subscriber_post_promotion_upper_s"],ack=r["subscriber"]["ack_count"],publisher_missing=len(r["publisher_missing_ack"]),downstream_missing=len(r["subscriber"]["missing_ack"])).items()} for r in rows]))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cohort
+          path: cohort.json
